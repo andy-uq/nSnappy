@@ -70,15 +70,17 @@ namespace test
 		[Test]
 		public void DecompressFile()
 		{
-			var expected = File.ReadAllBytes(GetTestFile("alice29.txt"));
-
+			var expected = GetTestFile("alice29.txt");
+			
 			using ( var source = File.OpenRead(GetExpectedFile("alice29.txt.comp")) )
 			{
 				var output = new MemoryStream();
-				int rawLength = Decompressor.Decompress(source, output);
+				Decompressor.Decompress(source, output);
 
-				Assert.That(rawLength, Is.EqualTo(expected.Length));
-				Assert.That(output.ToArray(), Is.EqualTo(expected));
+				var actual = GetOutputFile("alice29.txt");
+				File.WriteAllBytes(actual, output.ToArray());
+
+				FileAssert.AreEqual(expected, actual);
 			}
 		}
 	}

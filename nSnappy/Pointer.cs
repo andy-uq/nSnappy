@@ -69,7 +69,14 @@ namespace NSnappy
 
 		public uint ToUInt32(int offset = 0)
 		{
-			return BitConverter.ToUInt32(_buffer, _position + offset);
+			var l = _buffer.Length;
+
+			uint value = this[offset];
+			value |= (_position + offset + 1 >= l ? 0u : this[offset + 1]) << 8;
+			value |= (_position + offset + 2 >= l ? 0u : this[offset + 2]) << 16;
+			value |= (_position + offset + 3 >= l ? 0u : this[offset + 3]) << 24;
+
+			return value;
 		}
 
 		public override string ToString()

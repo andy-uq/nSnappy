@@ -21,20 +21,10 @@ namespace test
 		}
 
 		[Test]
-		public void Create()
-		{
-			var compressor = new Compressor();
-
-			int compressedLength = compressor.Compress(Stream.Null, Stream.Null);
-			Assert.That(compressedLength, Is.EqualTo(0));
-		}
-
-		[Test]
 		public void ZeroSizedFile()
 		{
-			var compressor = new Compressor();
-
 			var ms = new MemoryStream();
+			var compressor = new Compressor();
 			int compressedLength = compressor.Compress(Stream.Null, ms);
 
 			Assert.That(compressedLength, Is.EqualTo(1));
@@ -106,6 +96,21 @@ namespace test
 			File.WriteAllBytes(actual, ms.ToArray());
 
 			FileAssert.AreEqual(GetExpectedFile("alice29.txt.comp"), actual);
+		}
+
+		[Test]
+		public void CompressibleFile2()
+		{
+			var compressor = new Compressor();
+
+			var ms = new MemoryStream();
+			var data = File.ReadAllBytes(GetTestFile(@"ptt5"));
+			int compressedLength = compressor.Compress(new MemoryStream(data), ms);
+
+			var actual = GetOutputFile("ptt5.bin");
+			File.WriteAllBytes(actual, ms.ToArray());
+
+			FileAssert.AreEqual(GetExpectedFile("ptt5.comp"), actual);
 		}
 		
 		[Test]

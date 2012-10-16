@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace NSnappy
@@ -12,76 +13,27 @@ namespace NSnappy
 			var varInt = new VarInt32(length).GetEncodedValue();
 			output.Write(varInt, 0, varInt.Length);
 
-			byte[] scratch = null;
-			byte[] scratchOutput = null;
+			int bytesWritten = varInt.Length;
 
-			int pendingAdvance = 0;
+			int bytesToRead = Math.Min(length, CompressorConstants.BlockSize);
+			var fragment = new byte[bytesToRead];
+			int maxOutput = MaxCompressedOutput(bytesToRead);
+
+			var block = new byte[maxOutput];
 
 			while (length > 0)
 			{
-				byte[] fragment = Peek(input);
-				int bytesToRead = Math.Min(length, CompressorConstants.BlockSize);
+				var fragmentSize = input.Read(fragment, 0, bytesToRead);
+				var hashTable = new HashTable(fragmentSize);
 
-				var fragmentSize = fragment.Length;
-
-				if (fragmentSize >= bytesToRead )
-				{
-					pendingAdvance = bytesToRead;
-					fragmentSize = bytesToRead;
-				}
-				else
-				{
-					if (scratch == null)
-					{
-						scratch = new byte[bytesToRead];
-					}
-
-					Buffer.BlockCopy(fragment, 0, scratch, 0, fragment.Length);
-					Advance(input, fragment.Length);
-
-					int bytesRead = fragment.Length;
-					while (bytesRead < bytesToRead)
-					{
-						fragment = Peek(input);
-						int size = Math.Min(fragment.Length, bytesToRead - bytesRead);
-						Buffer.BlockCopy(scratch, bytesRead, fragment, 0, size);
-						bytesRead += size;
-						Advance(input, size);
-					}
-
-					fragment = scratch;
-					fragmentSize = bytesToRead;
-				}
-
-				Assert(fragmentSize == bytesToRead);
-
-				var hashTable = new HashTable(bytesToRead);
-				int maxOutput = MaxCompressedOutput(bytesToRead);
-
-				if (scratchOutput == null)
-				{
-					scratchOutput = new byte[maxOutput];
-				}
-
-				int bytesWritten = CompressFragment(fragment, fragmentSize, hashTable, scratchOutput);
-				output.Write(scratchOutput, 0, bytesWritten);
+				int blockSize = CompressFragment(fragment, fragmentSize, hashTable, block);
+				output.Write(block, 0, blockSize);
+				bytesWritten += blockSize;
 
 				length -= bytesToRead;
-				Advance(input, pendingAdvance);
 			}
 
-			return (int) output.Length;
-		}
-
-		private uint Hash(uint value, int shift)
-		{
-			uint kMul = 0x1e35a7bd;
-			return (value * kMul) >> shift;
-		}
-
-		private uint Hash(Pointer value, int shift)
-		{
-			return Hash(value.ToUInt32(), shift);
+			return bytesWritten;
 		}
 
 		private int CompressFragment(byte[] source, int length, HashTable hashTable, byte[] scratchOutput)
@@ -94,23 +46,25 @@ namespace NSnappy
 			var nextEmit = new Pointer(source);
 			Pointer baseIp = new Pointer(ip);
 
+			Func<Pointer, int, uint> hashPtr = (value, offset) => (value.ToUInt32(offset) * 0x1e35a7bd) >> shift;
+
 			if (length >= inputMarginBytes)
 			{
-				int ipLimit = length - inputMarginBytes;
+				var ipLimit = length - inputMarginBytes;
 
 				ip = ip + 1;
-				uint nextHash = Hash(ip, shift);
-				for ( ; ; )
+				var nextHash = hashPtr(ip, 0);
+				while (true)
 				{
 					uint skip = 32;
 
-					Pointer nextIp = new Pointer(ip);
+					var nextIp = new Pointer(ip);
 					Pointer candidate;
 					do
 					{
 						ip = nextIp;
 						uint hash = nextHash;
-						Assert(hash == Hash(ip, shift));
+						Assert(hash == hashPtr(ip, 0));
 
 						uint bytesBetweenHashLookups = skip++ >> 5;
 						nextIp = ip + bytesBetweenHashLookups;
@@ -120,7 +74,7 @@ namespace NSnappy
 							goto emit_remainder;
 						}
 
-						nextHash = Hash(nextIp, shift);
+						nextHash = hashPtr(nextIp, 0);
 						candidate = baseIp + hashTable[hash];
 						
 						Assert(candidate >= baseIp);
@@ -132,10 +86,10 @@ namespace NSnappy
 
 					Assert(nextEmit + 16 <= length);
 
-					op = EmitLiteral(op, nextEmit, ip - nextEmit, true);
+					op = EmitLiteral(op, nextEmit, ip - nextEmit, allowFastPath: true);
 
-					Pointer input_bytes;
-					uint candidate_bytes = 0;
+					Pointer inputBytes;
+					uint candidateBytes;
 
 					do
 					{
@@ -154,20 +108,20 @@ namespace NSnappy
 							goto emit_remainder;
 						}
 
-						input_bytes = insertTail;
+						inputBytes = insertTail;
 						
-						var prevHash = Hash(input_bytes.ToUInt32(offset:0), shift);
+						var prevHash = hashPtr(inputBytes, 0);
 						hashTable[prevHash] = ip - baseIp - 1;
 						
-						var curHash = Hash(input_bytes.ToUInt32(offset:1), shift);
+						var curHash = hashPtr(inputBytes, 1);
 						candidate = baseIp + hashTable[curHash];
 
-						candidate_bytes = candidate.ToUInt32();
+						candidateBytes = candidate.ToUInt32();
 						hashTable[curHash] = ip - baseIp;
 						
-					} while (input_bytes.ToUInt32(1) == candidate_bytes);
+					} while (inputBytes.ToUInt32(1) == candidateBytes);
 
-					nextHash = Hash(input_bytes.ToUInt32(2), shift);
+					nextHash = hashPtr(inputBytes, 2);
 					ip = ip + 1;
 				}
 			}
@@ -315,6 +269,7 @@ namespace NSnappy
 			return dest + length;
 		}
 
+		[Conditional("DEBUG")]
 		private void Assert(bool condition)
 		{
 			if (!condition)
@@ -347,22 +302,6 @@ namespace NSnappy
 		private int MaxCompressedOutput(int size)
 		{
 			return 32 + size + size / 6;
-		}
-
-		private void Advance(Stream input, int length)
-		{
-			input.Position += length;
-		}
-
-		private byte[] Peek(Stream input)
-		{
-			var position = input.Position;
-			
-			var data = new byte[input.Length - position];
-			input.Read(data, 0, data.Length);
-			input.Position = position;
-			
-			return data;
 		}
 	}
 }
