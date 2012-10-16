@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nSnappy", "nSnappy\nSnappy.csproj", "{5C47564B-FC61-4F00-8A69-9721F1A3A495}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{ABA16EB2-82A5-44E2-AB5A-BF3C3FCEFF46}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5C47564B-FC61-4F00-8A69-9721F1A3A495}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C47564B-FC61-4F00-8A69-9721F1A3A495}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C47564B-FC61-4F00-8A69-9721F1A3A495}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C47564B-FC61-4F00-8A69-9721F1A3A495}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABA16EB2-82A5-44E2-AB5A-BF3C3FCEFF46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABA16EB2-82A5-44E2-AB5A-BF3C3FCEFF46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABA16EB2-82A5-44E2-AB5A-BF3C3FCEFF46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABA16EB2-82A5-44E2-AB5A-BF3C3FCEFF46}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
