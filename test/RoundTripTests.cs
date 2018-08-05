@@ -29,22 +29,25 @@ namespace test
 		{
 			var inputFile = GetTestFile(@filename);
 
-			var compressedStream = new MemoryStream();
-			using (var fs = File.OpenRead(inputFile))
-			{
-				var compressor = new Compressor();
-				compressor.Compress(fs, compressedStream);
-			}
+		    for (var i = 0; i < 50; i++)
+		    {
+		        var compressedStream = new MemoryStream();
+		        using (var fs = File.OpenRead(inputFile))
+		        {
+		            var compressor = new Compressor();
+		            compressor.Compress(fs, compressedStream);
+		        }
 
-			compressedStream.Seek(0, SeekOrigin.Begin);
+		        compressedStream.Seek(0, SeekOrigin.Begin);
 
-			var outputFile = GetOutputFile(filename);
-			using (var fs = File.Create(outputFile))
-			{
-				Decompressor.Decompress(compressedStream, fs);
-			}
+		        var outputFile = GetOutputFile(filename);
+		        using (var fs = File.Create(outputFile))
+		        {
+		            Decompressor.Decompress(compressedStream, fs);
+		        }
 
-			FileAssert.AreEqual(inputFile, outputFile);
+		        FileAssert.AreEqual(inputFile, outputFile);
+		    }
 		}
 	}
 }

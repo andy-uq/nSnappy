@@ -1,4 +1,6 @@
-﻿namespace NSnappy
+﻿using System;
+
+namespace NSnappy
 {
 	public struct VarInt32
 	{
@@ -12,7 +14,7 @@
 			Value = value;
 		}
 
-		public VarInt32(byte[] data)
+		public VarInt32(ReadOnlySpan<byte> data)
 			: this()
 		{
 			Value = IntEncoder.Decode(data, MAX_ENCODED_BYTES);
