@@ -10,7 +10,7 @@ namespace test
 		{
 			get
 			{
-				var current = Environment.CurrentDirectory;
+				var current = TestContext.CurrentContext.TestDirectory;
 				while ( !Directory.Exists(Path.Combine(current, "Test Data")) )
 				{
 					current = Path.GetDirectoryName(current);
