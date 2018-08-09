@@ -1,6 +1,8 @@
-﻿using System.Linq;
-using NSnappy;
+﻿using System;
+using System.Linq;
+using NSpanny;
 using NUnit.Framework;
+using Shouldly;
 
 namespace test
 {
@@ -22,63 +24,93 @@ namespace test
 		[Test]
 		public void NegativeEncode()
 		{
-			var varint = new VarInt32(-1);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0xff, 0xff, 0xff, 0xff, 0xf }));
+			var buffer = new byte[5];
 
-			varint = new VarInt32(int.MinValue);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0x80, 0x80, 0x80, 0x80, 0x8 }));
+			new VarInt32(-1).GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0xff, 0xff, 0xff, 0xff, 0x0f }));
+
+			new VarInt32(int.MinValue).GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0x80, 0x80, 0x80, 0x80, 0x08 }));
 		}
 
 		[Test]
 		public void SingleByteEncode()
 		{
+			var buffer = new byte[128 * 5];
+			var position = 0;
+
+			ReadOnlySpan<byte> encode(VarInt32 i)
+			{
+				var encoded = i.GetEncodedValue(new Span<byte>(buffer, position, 5));
+				position += encoded.Length;
+				return encoded;
+			}
+
 			var varints = Enumerable
 				.Range(0, 128)
-				.Select(x => new VarInt32(x))
-				.Select(x => x.GetEncodedValue());
+				.Select(x => new VarInt32(x));
 
-			Assert.That(varints, Has.All.Length.EqualTo(1));
-			Assert.That(varints, Has.All.Exactly(1).LessThan(128));
+			foreach (var i in varints)
+			{
+				var encoded = encode(i);
+				encoded.Length.ShouldBe(1);
+			}
 		}
 
 		[Test]
 		public void DoubleByteEncode()
 		{
+			byte[] buffer = new byte[2];
+
 			var varint = new VarInt32(128);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0x80, 0x01 }));
+			varint.GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0x80, 0x01 }));
 
 			varint = new VarInt32(0x3fff);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0xff, 0x7f }));
+			varint.GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0xff, 0x7f }));
 		}
 
 		[Test]
-		public void TrippleByteEncode()
+		public void TripleByteEncode()
 		{
+			var buffer = new byte[3];
+
 			var varint = new VarInt32(0x4000);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0x80, 0x80, 0x01 }));
+			varint.GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0x80, 0x80, 0x01 }));
 
 			varint = new VarInt32(0x1fffff);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0xff, 0xff, 0x7f }));
+			varint.GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0xff, 0xff, 0x7f }));
 		}
 
 		[Test]
 		public void QuadByteEncode()
 		{
+			byte[] buffer = new byte[4];
+
 			var varint = new VarInt32(0x200000);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0x80, 0x80, 0x80, 0x01 }));
+			varint.GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0x80, 0x80, 0x80, 0x01 }));
 
 			varint = new VarInt32(0xfffffff);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0xff, 0xff, 0xff, 0x7f }));
+			varint.GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0xff, 0xff, 0xff, 0x7f }));
 		}
 
 		[Test]
 		public void FullByteEncode()
 		{
+			var buffer = new byte[5];
+
 			var varint = new VarInt32(0x10000000);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0x80, 0x80, 0x80, 0x80, 0x01 }));
+			varint.GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0x80, 0x80, 0x80, 0x80, 0x01 }));
 
 			varint = new VarInt32(int.MaxValue);
-			Assert.That(varint.GetEncodedValue(), Is.EqualTo(new byte[] { 0xff, 0xff, 0xff, 0xff, 0x7 }));
+			varint.GetEncodedValue(buffer);
+			Assert.That(buffer, Is.EqualTo(new byte[] { 0xff, 0xff, 0xff, 0xff, 0x7 }));
 		}
 
 		[Test]

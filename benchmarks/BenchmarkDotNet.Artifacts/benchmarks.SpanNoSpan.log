@@ -1,0 +1,242 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// restore --no-dependencies  /p:UseSharedCompilation=false took 1.65s and exited with 0
+// build --framework netcoreapp2.1 --configuration Release --no-restore --no-dependencies  /p:UseSharedCompilation=false took 3.49s and exited with 0
+// ***** Done, took 00:00:05 (5.31 sec)   *****
+// Found benchmarks:
+//   SpanNoSpan.nSnappy: DefaultJob
+//   SpanNoSpan.nSpanny: DefaultJob
+
+// **************************
+// Benchmark: SpanNoSpan.nSnappy: DefaultJob
+// *** Execute ***
+// Launch: 1 / 1
+// BeforeAnythingElse
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: DefaultJob
+OverheadJitting  1: 1 op, 418370.21 ns, 418.3702 us/op
+WorkloadJitting  1: 1 op, 32051345.36 ns, 32.0513 ms/op
+OverheadJitting  2: 16 op, 802370.05 ns, 50.1481 us/op
+WorkloadJitting  2: 16 op, 152204186.78 ns, 9.5128 ms/op
+WorkloadPilot    1: 16 op, 109745734.42 ns, 6.8591 ms/op
+WorkloadPilot    2: 32 op, 237334424.76 ns, 7.4167 ms/op
+WorkloadPilot    3: 64 op, 433112322.72 ns, 6.7674 ms/op
+WorkloadPilot    4: 128 op, 861651017.62 ns, 6.7316 ms/op
+OverheadWarmup   1: 128 op, 2765.43 ns, 21.6049 ns/op
+OverheadWarmup   2: 128 op, 790.12 ns, 6.1728 ns/op
+OverheadWarmup   3: 128 op, 790.12 ns, 6.1728 ns/op
+OverheadWarmup   4: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadWarmup   5: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadWarmup   6: 128 op, 790.12 ns, 6.1728 ns/op
+OverheadActual   1: 128 op, 790.12 ns, 6.1728 ns/op
+OverheadActual   2: 128 op, 2765.43 ns, 21.6049 ns/op
+OverheadActual   3: 128 op, 790.12 ns, 6.1728 ns/op
+OverheadActual   4: 128 op, 790.12 ns, 6.1728 ns/op
+OverheadActual   5: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual   6: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual   7: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual   8: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual   9: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual  10: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual  11: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual  12: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual  13: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual  14: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual  15: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual  16: 128 op, 395.06 ns, 3.0864 ns/op
+OverheadActual  17: 128 op, 395.06 ns, 3.0864 ns/op
+WorkloadWarmup   1: 128 op, 908252875.75 ns, 7.0957 ms/op
+WorkloadWarmup   2: 128 op, 857345636.60 ns, 6.6980 ms/op
+WorkloadWarmup   3: 128 op, 856274229.62 ns, 6.6896 ms/op
+WorkloadWarmup   4: 128 op, 877286764.53 ns, 6.8538 ms/op
+WorkloadWarmup   5: 128 op, 858818426.15 ns, 6.7095 ms/op
+WorkloadWarmup   6: 128 op, 872356001.04 ns, 6.8153 ms/op
+WorkloadWarmup   7: 128 op, 881154417.32 ns, 6.8840 ms/op
+WorkloadWarmup   8: 128 op, 846266134.81 ns, 6.6115 ms/op
+// BeforeActualRun
+WorkloadActual   1: 128 op, 844790579.84 ns, 6.5999 ms/op
+WorkloadActual   2: 128 op, 848008751.40 ns, 6.6251 ms/op
+WorkloadActual   3: 128 op, 851316206.89 ns, 6.6509 ms/op
+WorkloadActual   4: 128 op, 863456449.00 ns, 6.7458 ms/op
+WorkloadActual   5: 128 op, 844477296.01 ns, 6.5975 ms/op
+WorkloadActual   6: 128 op, 1058547729.96 ns, 8.2699 ms/op
+WorkloadActual   7: 128 op, 849918874.11 ns, 6.6400 ms/op
+WorkloadActual   8: 128 op, 840538927.19 ns, 6.5667 ms/op
+WorkloadActual   9: 128 op, 857501290.86 ns, 6.6992 ms/op
+WorkloadActual  10: 128 op, 846266134.81 ns, 6.6115 ms/op
+WorkloadActual  11: 128 op, 841466136.70 ns, 6.5740 ms/op
+WorkloadActual  12: 128 op, 843202827.38 ns, 6.5875 ms/op
+WorkloadActual  13: 128 op, 842726778.18 ns, 6.5838 ms/op
+WorkloadActual  14: 128 op, 845872258.42 ns, 6.6084 ms/op
+WorkloadActual  15: 128 op, 860571314.34 ns, 6.7232 ms/op
+// AfterActualRun
+WorkloadResult   1: 128 op, 844789975.62 ns, 6.5999 ms/op
+WorkloadResult   2: 128 op, 848008147.19 ns, 6.6251 ms/op
+WorkloadResult   3: 128 op, 851315602.68 ns, 6.6509 ms/op
+WorkloadResult   4: 128 op, 863455844.79 ns, 6.7457 ms/op
+WorkloadResult   5: 128 op, 844476691.80 ns, 6.5975 ms/op
+WorkloadResult   6: 128 op, 849918269.89 ns, 6.6400 ms/op
+WorkloadResult   7: 128 op, 840538322.98 ns, 6.5667 ms/op
+WorkloadResult   8: 128 op, 857500686.65 ns, 6.6992 ms/op
+WorkloadResult   9: 128 op, 846265530.60 ns, 6.6114 ms/op
+WorkloadResult  10: 128 op, 841465532.49 ns, 6.5739 ms/op
+WorkloadResult  11: 128 op, 843202223.16 ns, 6.5875 ms/op
+WorkloadResult  12: 128 op, 842726173.97 ns, 6.5838 ms/op
+WorkloadResult  13: 128 op, 845871654.21 ns, 6.6084 ms/op
+WorkloadResult  14: 128 op, 860570710.13 ns, 6.7232 ms/op
+GC:  695 6 6 2211837952 128
+// AfterAll
+
+Mean = 6.6295 ms, StdErr = 0.0151 ms (0.23%); N = 14, StdDev = 0.0564 ms
+Min = 6.5667 ms, Q1 = 6.5875 ms, Median = 6.6099 ms, Q3 = 6.6509 ms, Max = 6.7457 ms
+IQR = 0.0634 ms, LowerFence = 6.4924 ms, UpperFence = 6.7460 ms
+ConfidenceInterval = [6.5659 ms; 6.6931 ms] (CI 99.9%), Margin = 0.0636 ms (0.96% of Mean)
+Skewness = 0.83, Kurtosis = 2.25, MValue = 2
+
+// **************************
+// Benchmark: SpanNoSpan.nSpanny: DefaultJob
+// *** Execute ***
+// Launch: 1 / 1
+// BeforeAnythingElse
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: DefaultJob
+OverheadJitting  1: 1 op, 375703.56 ns, 375.7036 us/op
+WorkloadJitting  1: 1 op, 35322455.18 ns, 35.3225 ms/op
+WorkloadPilot    1: 2 op, 42531143.69 ns, 21.2656 ms/op
+WorkloadPilot    2: 3 op, 42610156.01 ns, 14.2034 ms/op
+WorkloadPilot    3: 4 op, 67531430.11 ns, 16.8829 ms/op
+WorkloadPilot    4: 5 op, 40246107.56 ns, 8.0492 ms/op
+WorkloadPilot    5: 6 op, 43329958.19 ns, 7.2217 ms/op
+WorkloadPilot    6: 7 op, 48008672.39 ns, 6.8584 ms/op
+WorkloadPilot    7: 8 op, 57568372.32 ns, 7.1960 ms/op
+WorkloadPilot    8: 9 op, 64656171.99 ns, 7.1840 ms/op
+WorkloadPilot    9: 10 op, 72642341.67 ns, 7.2642 ms/op
+WorkloadPilot   10: 11 op, 75435426.99 ns, 6.8578 ms/op
+WorkloadPilot   11: 12 op, 88297446.60 ns, 7.3581 ms/op
+WorkloadPilot   12: 13 op, 93874925.88 ns, 7.2211 ms/op
+WorkloadPilot   13: 14 op, 95465048.71 ns, 6.8189 ms/op
+WorkloadPilot   14: 15 op, 106428007.34 ns, 7.0952 ms/op
+WorkloadPilot   15: 16 op, 112178523.58 ns, 7.0112 ms/op
+WorkloadPilot   16: 32 op, 217470728.90 ns, 6.7960 ms/op
+WorkloadPilot   17: 64 op, 435699185.90 ns, 6.8078 ms/op
+WorkloadPilot   18: 128 op, 854184353.90 ns, 6.6733 ms/op
+WorkloadWarmup   1: 128 op, 870500001.78 ns, 6.8008 ms/op
+WorkloadWarmup   2: 128 op, 862646967.84 ns, 6.7394 ms/op
+WorkloadWarmup   3: 128 op, 853724897.29 ns, 6.6697 ms/op
+WorkloadWarmup   4: 128 op, 872732889.78 ns, 6.8182 ms/op
+WorkloadWarmup   5: 128 op, 853639563.99 ns, 6.6691 ms/op
+WorkloadWarmup   6: 128 op, 852822971.72 ns, 6.6627 ms/op
+WorkloadWarmup   7: 128 op, 871098125.00 ns, 6.8055 ms/op
+WorkloadWarmup   8: 128 op, 853061193.85 ns, 6.6645 ms/op
+// BeforeActualRun
+WorkloadActual   1: 128 op, 902304828.72 ns, 7.0493 ms/op
+WorkloadActual   2: 128 op, 852540502.70 ns, 6.6605 ms/op
+WorkloadActual   3: 128 op, 859170426.01 ns, 6.7123 ms/op
+WorkloadActual   4: 128 op, 870010915.55 ns, 6.7970 ms/op
+WorkloadActual   5: 128 op, 863530325.52 ns, 6.7463 ms/op
+WorkloadActual   6: 128 op, 863516103.30 ns, 6.7462 ms/op
+WorkloadActual   7: 128 op, 901517075.94 ns, 7.0431 ms/op
+WorkloadActual   8: 128 op, 865398176.63 ns, 6.7609 ms/op
+WorkloadActual   9: 128 op, 894311942.99 ns, 6.9868 ms/op
+WorkloadActual  10: 128 op, 874445086.64 ns, 6.8316 ms/op
+WorkloadActual  11: 128 op, 861786918.80 ns, 6.7327 ms/op
+WorkloadActual  12: 128 op, 864305831.39 ns, 6.7524 ms/op
+WorkloadActual  13: 128 op, 860429882.30 ns, 6.7221 ms/op
+WorkloadActual  14: 128 op, 865228300.16 ns, 6.7596 ms/op
+WorkloadActual  15: 128 op, 850044503.69 ns, 6.6410 ms/op
+// AfterActualRun
+WorkloadResult   1: 128 op, 852540502.70 ns, 6.6605 ms/op
+WorkloadResult   2: 128 op, 859170426.01 ns, 6.7123 ms/op
+WorkloadResult   3: 128 op, 870010915.55 ns, 6.7970 ms/op
+WorkloadResult   4: 128 op, 863530325.52 ns, 6.7463 ms/op
+WorkloadResult   5: 128 op, 863516103.30 ns, 6.7462 ms/op
+WorkloadResult   6: 128 op, 865398176.63 ns, 6.7609 ms/op
+WorkloadResult   7: 128 op, 894311942.99 ns, 6.9868 ms/op
+WorkloadResult   8: 128 op, 874445086.64 ns, 6.8316 ms/op
+WorkloadResult   9: 128 op, 861786918.80 ns, 6.7327 ms/op
+WorkloadResult  10: 128 op, 864305831.39 ns, 6.7524 ms/op
+WorkloadResult  11: 128 op, 860429882.30 ns, 6.7221 ms/op
+WorkloadResult  12: 128 op, 865228300.16 ns, 6.7596 ms/op
+WorkloadResult  13: 128 op, 850044503.69 ns, 6.6410 ms/op
+GC:  693 6 6 2202735616 128
+// AfterAll
+
+Mean = 6.7576 ms, StdErr = 0.0236 ms (0.35%); N = 13, StdDev = 0.0851 ms
+Min = 6.6410 ms, Q1 = 6.7172 ms, Median = 6.7463 ms, Q3 = 6.7789 ms, Max = 6.9868 ms
+IQR = 0.0618 ms, LowerFence = 6.6246 ms, UpperFence = 6.8716 ms
+ConfidenceInterval = [6.6558 ms; 6.8595 ms] (CI 99.9%), Margin = 0.1019 ms (1.51% of Mean)
+Skewness = 1.23, Kurtosis = 4.51, MValue = 2
+
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts\results\benchmarks.SpanNoSpan-report.csv
+  BenchmarkDotNet.Artifacts\results\benchmarks.SpanNoSpan-report-github.md
+  BenchmarkDotNet.Artifacts\results\benchmarks.SpanNoSpan-report.html
+
+// * Detailed results *
+SpanNoSpan.nSnappy: DefaultJob
+Runtime = .NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 6.6295 ms, StdErr = 0.0151 ms (0.23%); N = 14, StdDev = 0.0564 ms
+Min = 6.5667 ms, Q1 = 6.5875 ms, Median = 6.6099 ms, Q3 = 6.6509 ms, Max = 6.7457 ms
+IQR = 0.0634 ms, LowerFence = 6.4924 ms, UpperFence = 6.7460 ms
+ConfidenceInterval = [6.5659 ms; 6.6931 ms] (CI 99.9%), Margin = 0.0636 ms (0.96% of Mean)
+Skewness = 0.83, Kurtosis = 2.25, MValue = 2
+-------------------- Histogram --------------------
+[6.546 ms ; 6.766 ms) | @@@@@@@@@@@@@@
+---------------------------------------------------
+
+SpanNoSpan.nSpanny: DefaultJob
+Runtime = .NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 6.7576 ms, StdErr = 0.0236 ms (0.35%); N = 13, StdDev = 0.0851 ms
+Min = 6.6410 ms, Q1 = 6.7172 ms, Median = 6.7463 ms, Q3 = 6.7789 ms, Max = 6.9868 ms
+IQR = 0.0618 ms, LowerFence = 6.6246 ms, UpperFence = 6.8716 ms
+ConfidenceInterval = [6.6558 ms; 6.8595 ms] (CI 99.9%), Margin = 0.1019 ms (1.51% of Mean)
+Skewness = 1.23, Kurtosis = 4.51, MValue = 2
+-------------------- Histogram --------------------
+[6.609 ms ; 6.804 ms) | @@@@@@@@@@@
+[6.804 ms ; 7.018 ms) | @@
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet=v0.11.0, OS=Windows 10.0.17134.191 (1803/April2018Update/Redstone4)
+Intel Core i7-6700HQ CPU 2.60GHz (Skylake), 1 CPU, 8 logical and 4 physical cores
+Frequency=2531251 Hz, Resolution=395.0616 ns, Timer=TSC
+.NET Core SDK=2.1.302
+  [Host]     : .NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT
+  DefaultJob : .NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT
+
+
+  Method |     Mean |     Error |    StdDev |     Gen 0 |   Gen 1 |   Gen 2 | Allocated |
+-------- |---------:|----------:|----------:|----------:|--------:|--------:|----------:|
+ nSnappy | 6.630 ms | 0.0636 ms | 0.0564 ms | 5429.6875 | 46.8750 | 46.8750 |  16.48 MB |
+ nSpanny | 6.758 ms | 0.1019 ms | 0.0851 ms | 5414.0625 | 46.8750 | 46.8750 |  16.41 MB |
+
+// * Hints *
+Outliers
+  SpanNoSpan.nSnappy: Default -> 1 outlier  was  removed
+  SpanNoSpan.nSpanny: Default -> 2 outliers were removed
+
+// * Legends *
+  Mean      : Arithmetic mean of all measurements
+  Error     : Half of 99.9% confidence interval
+  StdDev    : Standard deviation of all measurements
+  Gen 0     : GC Generation 0 collects per 1k Operations
+  Gen 1     : GC Generation 1 collects per 1k Operations
+  Gen 2     : GC Generation 2 collects per 1k Operations
+  Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 ms      : 1 Millisecond (0.001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:48 (48.96 sec), executed benchmarks: 2
+
+// * Artifacts cleanup *

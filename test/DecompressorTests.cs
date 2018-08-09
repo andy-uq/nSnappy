@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using NSnappy;
+using NSpanny;
 using NUnit.Framework;
 
 namespace test

@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using NSnappy;
+using NSpanny;
 using NUnit.Framework;
 
 namespace test

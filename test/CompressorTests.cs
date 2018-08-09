@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using NSnappy;
+using NSpanny;
 using NUnit.Framework;
 
 namespace test
@@ -105,7 +104,7 @@ namespace test
 
 			var ms = new MemoryStream();
 			var data = File.ReadAllBytes(GetTestFile(@"ptt5"));
-			int compressedLength = compressor.Compress(new MemoryStream(data), ms);
+			compressor.Compress(new MemoryStream(data), ms);
 
 			var actual = GetOutputFile("ptt5.bin");
 			File.WriteAllBytes(actual, ms.ToArray());
