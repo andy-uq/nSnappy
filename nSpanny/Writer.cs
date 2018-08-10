@@ -2,8 +2,8 @@ using System.IO;
 
 namespace NSpanny
 {
-	[System.Diagnostics.DebuggerDisplay("Value: {DebugString}")]
-	class Writer
+	[System.Diagnostics.DebuggerDisplay("Value: {" + nameof(DebugString) + "}")]
+	public class Writer
 	{
 		private readonly Stream _output;
 		private byte[] _buffer;
@@ -14,10 +14,7 @@ namespace NSpanny
 			_output = output;
 		}
 
-		private string DebugString
-		{
-			get { return System.Text.Encoding.ASCII.GetString(_buffer, 0, _index); }
-		}
+		private string DebugString => System.Text.Encoding.ASCII.GetString(_buffer, 0, _index);
 
 		public void SetExpectedLength(uint len)
 		{
@@ -47,10 +44,11 @@ namespace NSpanny
 			{
 				return false;
 			}
-			
-			var op = new Pointer(_buffer, _index);
-			op.Copy64(ip);
-			op.Copy64(ip + 8, 8);
+
+			var op = new Pointer(_buffer, _index).ToUInt64();
+			var source = ip.ToUInt64();
+			op[0] = source[0];
+			op[1] = source[1];
 
 			_index += len;
 			return true;
@@ -68,9 +66,9 @@ namespace NSpanny
 			var op = new Pointer(_buffer, _index);
 			if ( len <= 16 && offset >= 8 && spaceLeft >= 16 )
 			{
-				var src = new Pointer(_buffer, _index - offset);
-				op.Copy64(src);
-				op.Copy64(src + 8, offset:8);
+				var src = new ReadOnlyPointer(_buffer, _index - offset).ToUInt64();
+				op.WriteUInt64(src[0]);
+				op.WriteUInt64(src[1]);
 			}
 			else
 			{
@@ -104,18 +102,18 @@ namespace NSpanny
 			} while (--len > 0);
 		}
 
-		private void IncrementalCopyFastPath(Pointer src, Pointer op, int len)
+		private void IncrementalCopyFastPath(ReadOnlyPointer src, Pointer op, int len)
 		{
 			while ( op - src < 8 )
 			{
-				op.Copy64(src);
+				op.WriteUInt64(src);
 				len -= op - src;
 				op += op - src;
 			}
 
 			while ( len > 0 )
 			{
-				op.Copy64(src);
+				op.WriteUInt64(src);
 				src += 8;
 				op += 8;
 				len -= 8;

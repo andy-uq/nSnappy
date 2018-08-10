@@ -1,10 +1,86 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace NSpanny
 {
-	public class Pointer : IEquatable<Pointer>
+	public ref struct ReadOnlyPointer
 	{
-		private readonly byte[] _buffer;
+		private readonly ReadOnlySpan<byte> _buffer;
+		private readonly ReadOnlySpan<byte> _data;
+		private readonly int _position;
+		private readonly string _name;
+
+		public ReadOnlyPointer(ReadOnlySpan<byte> buffer, int position = 0, string name = null)
+		{
+			_buffer = buffer;
+			_position = position;
+			_name = name;
+
+			_data = buffer.Slice(_position);
+		}
+
+		public ReadOnlyPointer(ReadOnlyPointer pointer) : this()
+		{
+			_buffer = pointer._buffer;
+			_position = pointer._position;
+			_name = pointer._name;
+			_data = pointer._data;
+		}
+
+		public static ReadOnlyPointer operator +(ReadOnlyPointer pointer, int value)
+		{
+			return new ReadOnlyPointer(pointer._buffer, pointer._position + value, pointer._name);
+		}
+
+		public static ReadOnlyPointer operator -(ReadOnlyPointer pointer, int value)
+		{
+			return new ReadOnlyPointer(pointer._buffer, pointer._position - value, pointer._name);
+		}
+
+		public static ReadOnlyPointer operator +(ReadOnlyPointer pointer, uint value)
+		{
+			return new ReadOnlyPointer(pointer._buffer, checked((int) (pointer._position + value)), pointer._name);
+		}
+
+		public static implicit operator int(ReadOnlyPointer pointer) => pointer._position;
+
+		public byte this[int offset] => _data[offset];
+
+		public static bool operator ==(ReadOnlyPointer left, ReadOnlyPointer right)
+		{
+			return left._data == right._data;
+		}
+
+		public static bool operator !=(ReadOnlyPointer left, ReadOnlyPointer right)
+		{
+			return left._data != right._data;
+		}
+
+		public override string ToString()
+		{
+			var name = _name ?? "<???>";
+			return _position == 0
+				? string.Format("{0}[{1}]",     name, _buffer.Length)
+				: string.Format("{0}[{1}]+{2}", name, _buffer.Length, _position);
+		}
+		
+		public ReadOnlySpan<ushort> ToUInt16() => MemoryMarshal.Cast<byte, ushort>(_data);
+		public ReadOnlySpan<uint> ToUInt32() => MemoryMarshal.Cast<byte, uint>(_data);
+		public ReadOnlySpan<ulong> ToUInt64() => MemoryMarshal.Cast<byte, ulong>(_data);
+
+		public void CopyTo(Span<byte> destination)
+		{
+			_data
+				.Slice(0, destination.Length)
+				.CopyTo(destination);
+		}
+	}
+
+
+	public ref struct Pointer
+	{
+		private readonly Span<byte> _buffer;
+		private readonly Span<byte> _data;
 		private readonly string _name;
 		private readonly int _position;
 
@@ -12,19 +88,21 @@ namespace NSpanny
 		{
 			_buffer = copyFrom._buffer;
 			_position = copyFrom._position;
+			_name = copyFrom._name;
+			_data = copyFrom._data;
 		}
 
-		public Pointer(byte[] buffer, int position = 0, string name = null)
+		public Pointer(Span<byte> buffer, int position = 0, string name = null)
 		{
 			_buffer = buffer;
 			_position = position;
 			_name = name;
+			_data = buffer.Slice(position);
 		}
 
-		public static implicit operator int(Pointer pointer)
-		{
-			return pointer._position;
-		}
+		public static implicit operator int(Pointer pointer) => pointer._position;
+
+		public static implicit operator ReadOnlyPointer(Pointer pointer) => new ReadOnlyPointer(pointer._buffer, pointer._position, pointer._name);
 
 		public static Pointer operator +(Pointer pointer, int value)
 		{
@@ -43,41 +121,39 @@ namespace NSpanny
 
 		public byte this[int offset]
 		{
-			get { return _buffer[_position + offset]; }
-			set { _buffer[_position + offset] = value; }
+			get => _data[offset];
+			set => _data[offset] = value;
 		}
 
 		public void Copy(Pointer source, int length)
 		{
-			Buffer.BlockCopy(source._buffer, source._position, _buffer, _position, length);
+			source.CopyTo(_data.Slice(0, length));
 		}
 
-		public void Copy64(Pointer source, int offset = 0)
+		private void CopyTo(Span<byte> destination)
 		{
-			offset += _position;
-			for ( var i = 0; i < 8; i++ )
-			{
-				_buffer[offset + i] = source[i];
-			}
+			_data
+				.Slice(0, destination.Length)
+				.CopyTo(destination);
 		}
 
-		public void WriteUInt16(int value)
+		public void Copy(ReadOnlyPointer source, int length)
 		{
-			_buffer[_position] = (byte) (value & 0xff);
-			_buffer[_position + 1] = (byte) (value >> 8 & 0xff);
+			source.CopyTo(_data.Slice(0, length));
 		}
 
-		public uint ToUInt32(int offset = 0)
+		public void WriteUInt64(ulong p0)
 		{
-			var l = _buffer.Length;
-
-			uint value = this[offset];
-			value |= (_position + offset + 1 >= l ? 0u : this[offset + 1]) << 8;
-			value |= (_position + offset + 2 >= l ? 0u : this[offset + 2]) << 16;
-			value |= (_position + offset + 3 >= l ? 0u : this[offset + 3]) << 24;
-
-			return value;
+			var uint64 = ToUInt64();
+			uint64[0] = p0;
 		}
+
+		public void WriteUInt64(ReadOnlyPointer src) => src.CopyTo(_data.Slice(0, 8));
+		public void WriteUInt64(Pointer src) => src.CopyTo(_data.Slice(0, 8));
+
+		public Span<ushort> ToUInt16() => MemoryMarshal.Cast<byte, ushort>(_data);
+		public Span<uint> ToUInt32() => MemoryMarshal.Cast<byte, uint>(_data);
+		public Span<ulong> ToUInt64() => MemoryMarshal.Cast<byte, ulong>(_data);
 
 		public override string ToString()
 		{
@@ -87,37 +163,14 @@ namespace NSpanny
 			       	: string.Format("{0}[{1}]+{2}", name, _buffer.Length, _position);
 		}
 
-		public bool Equals(Pointer other)
-		{
-			if (ReferenceEquals(null, other)) return false;
-			if (ReferenceEquals(this, other)) return true;
-			return Equals(other._buffer, _buffer) && other._position == _position;
-		}
-
-		public override bool Equals(object obj)
-		{
-			if (ReferenceEquals(null, obj)) return false;
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != typeof (Pointer)) return false;
-			return Equals((Pointer) obj);
-		}
-
-		public override int GetHashCode()
-		{
-			unchecked
-			{
-				return (_buffer.GetHashCode()*397) ^ _position;
-			}
-		}
-
 		public static bool operator ==(Pointer left, Pointer right)
 		{
-			return Equals(left, right);
+			return left._data == right._data;
 		}
 
 		public static bool operator !=(Pointer left, Pointer right)
 		{
-			return !Equals(left, right);
+			return left._data != right._data;
 		}
 	}
 }

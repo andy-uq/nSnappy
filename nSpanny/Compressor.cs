@@ -17,59 +17,63 @@ namespace NSpanny
 
 			var fragment = ArrayPool<byte>.Shared.Rent(bytesToRead);
 			var block = ArrayPool<byte>.Shared.Rent(maxOutput);
-
-			var varInt = new VarInt32(length).GetEncodedValue(block);
-			output.Write(block, 0, varInt.Length);
-
-			int bytesWritten = varInt.Length;
-
-			while (length > 0)
+			try
 			{
-				var fragmentSize = input.Read(fragment, 0, bytesToRead);
-				var hashTable = new HashTable(fragmentSize);
+				var varInt = new VarInt32(length).GetEncodedValue(block);
+				output.Write(block, 0, varInt.Length);
 
-				int blockSize = CompressFragment(fragment, fragmentSize, hashTable, block);
-				output.Write(block, 0, blockSize);
-				bytesWritten += blockSize;
+				int bytesWritten = varInt.Length;
 
-				length -= bytesToRead;
+				while (length > 0)
+				{
+					var fragmentSize = input.Read(fragment, 0, bytesToRead);
+					var hashTable    = new HashTable(fragmentSize);
+
+					int blockSize = CompressFragment(fragment.AsSpan(0, fragmentSize), hashTable, block);
+					output.Write(block, 0, blockSize);
+					bytesWritten += blockSize;
+
+					length -= bytesToRead;
+				}
+
+				return bytesWritten;
 			}
-
-			ArrayPool<byte>.Shared.Return(fragment);
-			ArrayPool<byte>.Shared.Return(block);
-
-			return bytesWritten;
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(fragment);
+				ArrayPool<byte>.Shared.Return(block);
+			}
 		}
 
-		private int CompressFragment(byte[] source, int length, HashTable hashTable, byte[] scratchOutput)
+		private int CompressFragment(ReadOnlySpan<byte> source, HashTable hashTable, byte[] scratchOutput)
 		{
 			const int inputMarginBytes = 15;
 
 			int shift = 32 - Log2Floor(hashTable.Size);
 			var op = new Pointer(scratchOutput);
-			var ip = new Pointer(source);
-			var nextEmit = new Pointer(source);
-			Pointer baseIp = new Pointer(ip);
+			var ip = new ReadOnlyPointer(source);
+			var nextEmit = new ReadOnlyPointer(source);
+			var baseIp = new ReadOnlyPointer(ip);
 
-			Func<Pointer, int, uint> hashPtr = (value, offset) => (value.ToUInt32(offset) * 0x1e35a7bd) >> shift;
+			uint hash_ptr(ReadOnlyPointer value, int offset) => (value.ToUInt32(offset) * 0x1e35a7bd) >> shift;
 
-			if (length >= inputMarginBytes)
+			if (source.Length >= inputMarginBytes)
 			{
-				var ipLimit = length - inputMarginBytes;
+				var ipLimit = source.Length - inputMarginBytes;
 
 				ip = ip + 1;
-				var nextHash = hashPtr(ip, 0);
+				var nextHash = hash_ptr(ip, 0);
 				while (true)
 				{
 					uint skip = 32;
 
-					var nextIp = new Pointer(ip);
-					Pointer candidate;
+					var nextIp = new ReadOnlyPointer(ip);
+					ReadOnlyPointer candidate;
 					do
 					{
 						ip = nextIp;
 						uint hash = nextHash;
-						Assert(hash == hashPtr(ip, 0));
+						Assert(hash == hash_ptr(ip, 0));
 
 						uint bytesBetweenHashLookups = skip++ >> 5;
 						nextIp = ip + bytesBetweenHashLookups;
@@ -79,7 +83,7 @@ namespace NSpanny
 							goto emit_remainder;
 						}
 
-						nextHash = hashPtr(nextIp, 0);
+						nextHash = hash_ptr(nextIp, 0);
 						candidate = baseIp + hashTable[hash];
 						
 						Assert(candidate >= baseIp);
@@ -89,23 +93,23 @@ namespace NSpanny
 
 					} while (ip.ToUInt32() != candidate.ToUInt32());
 
-					Assert(nextEmit + 16 <= length);
+					Assert(nextEmit + 16 <= source.Length);
 
 					op = EmitLiteral(op, nextEmit, ip - nextEmit, allowFastPath: true);
 
-					Pointer inputBytes;
+					ReadOnlyPointer inputBytes;
 					uint candidateBytes;
 
 					do
 					{
-						Pointer b = ip;
-						int matched = 4 + FindMatchLength(candidate + 4, ip + 4, length);
+						var b = ip;
+						int matched = 4 + FindMatchLength(candidate + 4, ip + 4, source.Length);
 						ip += matched;
 						var offset = b - candidate;
 
 						op = EmitCopy(op, offset, matched);
 
-						Pointer insertTail = ip - 1;
+						var insertTail = ip - 1;
 						nextEmit = ip;
 
 						if ( ip >= ipLimit )
@@ -115,10 +119,10 @@ namespace NSpanny
 
 						inputBytes = insertTail;
 						
-						var prevHash = hashPtr(inputBytes, 0);
+						var prevHash = hash_ptr(inputBytes, 0);
 						hashTable[prevHash] = ip - baseIp - 1;
 						
-						var curHash = hashPtr(inputBytes, 1);
+						var curHash = hash_ptr(inputBytes, 1);
 						candidate = baseIp + hashTable[curHash];
 
 						candidateBytes = candidate.ToUInt32();
@@ -126,21 +130,21 @@ namespace NSpanny
 						
 					} while (inputBytes.ToUInt32(1) == candidateBytes);
 
-					nextHash = hashPtr(inputBytes, 2);
+					nextHash = hash_ptr(inputBytes, 2);
 					ip = ip + 1;
 				}
 			}
 
 			emit_remainder:
-			if (nextEmit < length)
+			if (nextEmit < source.Length)
 			{
-				op = EmitLiteral(op, nextEmit, length - nextEmit, false);
+				op = EmitLiteral(op, nextEmit, source.Length - nextEmit, false);
 			}
 
 			return op;
 		}
 
-		private int FindMatchLength(Pointer p1, Pointer p2, int length)
+		private int FindMatchLength(ReadOnlyPointer p1, ReadOnlyPointer p2, int length)
 		{
 			int matched = 0;
 			while ( p2 <= length - 4 && p2.ToUInt32() == (p1 + matched).ToUInt32() )
@@ -234,7 +238,7 @@ namespace NSpanny
 			return op;
 		}
 
-		private Pointer EmitLiteral(Pointer dest, Pointer literal, int length, bool allowFastPath)
+		private Pointer EmitLiteral(Pointer dest, ReadOnlyPointer literal, int length, bool allowFastPath)
 		{
 			int n = length - 1;
 			if (n<60)

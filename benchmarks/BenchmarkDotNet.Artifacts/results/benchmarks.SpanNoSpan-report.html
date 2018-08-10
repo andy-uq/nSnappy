@@ -13,20 +13,19 @@
 </head>
 <body>
 <pre><code>
-BenchmarkDotNet=v0.11.0, OS=Windows 10.0.17134.191 (1803/April2018Update/Redstone4)
-Intel Core i7-6700HQ CPU 2.60GHz (Skylake), 1 CPU, 8 logical and 4 physical cores
-Frequency=2531251 Hz, Resolution=395.0616 ns, Timer=TSC
-.NET Core SDK=2.1.302
-  [Host]     : .NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT
-  DefaultJob : .NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT
+BenchmarkDotNet=v0.11.0, OS=Windows 10.0.17134.165 (1803/April2018Update/Redstone4)
+Intel Core i7-8700K CPU 3.70GHz (Coffee Lake), 1 CPU, 12 logical and 6 physical cores
+.NET Core SDK=2.1.301
+  [Host]     : .NET Core 2.1.1 (CoreCLR 4.6.26606.02, CoreFX 4.6.26606.05), 64bit RyuJIT
+  DefaultJob : .NET Core 2.1.1 (CoreCLR 4.6.26606.02, CoreFX 4.6.26606.05), 64bit RyuJIT
 </code></pre>
 <pre><code></code></pre>
 
 <table>
 <thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th>
 </tr>
-</thead><tbody><tr><td>nSnappy</td><td>6.630 ms</td><td>0.0636 ms</td><td>0.0564 ms</td><td>5429.6875</td><td>46.8750</td><td>46.8750</td><td>16.48 MB</td>
-</tr><tr><td>nSpanny</td><td>6.758 ms</td><td>0.1019 ms</td><td>0.0851 ms</td><td>5414.0625</td><td>46.8750</td><td>46.8750</td><td>16.41 MB</td>
+</thead><tbody><tr><td>nSnappy</td><td>4.785 ms</td><td>0.0174 ms</td><td>0.0136 ms</td><td>2718.7500</td><td>195.3125</td><td>46.8750</td><td>16.48 MB</td>
+</tr><tr><td>nSpanny</td><td>5.697 ms</td><td>0.0317 ms</td><td>0.0296 ms</td><td>367.1875</td><td>93.7500</td><td>46.8750</td><td>2.36 MB</td>
 </tr></tbody></table>
 </body>
 </html>

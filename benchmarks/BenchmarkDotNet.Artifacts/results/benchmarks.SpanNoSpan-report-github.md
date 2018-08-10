@@ -1,15 +1,14 @@
 ``` ini
 
-BenchmarkDotNet=v0.11.0, OS=Windows 10.0.17134.191 (1803/April2018Update/Redstone4)
-Intel Core i7-6700HQ CPU 2.60GHz (Skylake), 1 CPU, 8 logical and 4 physical cores
-Frequency=2531251 Hz, Resolution=395.0616 ns, Timer=TSC
-.NET Core SDK=2.1.302
-  [Host]     : .NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT
-  DefaultJob : .NET Core 2.1.2 (CoreCLR 4.6.26628.05, CoreFX 4.6.26629.01), 64bit RyuJIT
+BenchmarkDotNet=v0.11.0, OS=Windows 10.0.17134.165 (1803/April2018Update/Redstone4)
+Intel Core i7-8700K CPU 3.70GHz (Coffee Lake), 1 CPU, 12 logical and 6 physical cores
+.NET Core SDK=2.1.301
+  [Host]     : .NET Core 2.1.1 (CoreCLR 4.6.26606.02, CoreFX 4.6.26606.05), 64bit RyuJIT
+  DefaultJob : .NET Core 2.1.1 (CoreCLR 4.6.26606.02, CoreFX 4.6.26606.05), 64bit RyuJIT
 
 
 ```
-|  Method |     Mean |     Error |    StdDev |     Gen 0 |   Gen 1 |   Gen 2 | Allocated |
-|-------- |---------:|----------:|----------:|----------:|--------:|--------:|----------:|
-| nSnappy | 6.630 ms | 0.0636 ms | 0.0564 ms | 5429.6875 | 46.8750 | 46.8750 |  16.48 MB |
-| nSpanny | 6.758 ms | 0.1019 ms | 0.0851 ms | 5414.0625 | 46.8750 | 46.8750 |  16.41 MB |
+|  Method |     Mean |     Error |    StdDev |     Gen 0 |    Gen 1 |   Gen 2 | Allocated |
+|-------- |---------:|----------:|----------:|----------:|---------:|--------:|----------:|
+| nSnappy | 4.785 ms | 0.0174 ms | 0.0136 ms | 2718.7500 | 195.3125 | 46.8750 |  16.48 MB |
+| nSpanny | 5.697 ms | 0.0317 ms | 0.0296 ms |  367.1875 |  93.7500 | 46.8750 |   2.36 MB |
