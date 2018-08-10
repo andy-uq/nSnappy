@@ -27,7 +27,7 @@ namespace benchmarks
 
         public SpanNoSpan()
         {
-            var data = File.ReadAllBytes(@"C:\git\nSnappy\test\Test Data\alice29.txt");
+            var data = File.ReadAllBytes(@"C:\source\c#\nSnappy\test\Test Data\alice29.txt");
             _input = new MemoryStream(data);
         }
 

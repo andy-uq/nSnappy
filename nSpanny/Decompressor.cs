@@ -7,24 +7,11 @@ namespace NSpanny
 	public class Decompressor
 	{
 		private readonly Writer _output;
-		private Pointer _ip;
 		private int _ipLimit;
 		private uint _rawLength;
 
 		private Decompressor(byte[] compressed, Stream output)
 		{
-			if (compressed.Length < CompressorConstants.BlockSize)
-			{
-				var scratch = new byte[CompressorConstants.BlockSize];
-				Buffer.BlockCopy(compressed, 0, scratch, 0, compressed.Length);
-
-				_ip = new Pointer(scratch);
-			}
-			else
-			{
-				_ip = new Pointer(compressed);
-			}
-
 			_output = new Writer(output);
 			_ipLimit = compressed.Length;
 		}
@@ -34,43 +21,53 @@ namespace NSpanny
 			var compressed = new byte[input.Length];
 			input.Read(compressed, 0, compressed.Length);
 
+			ReadOnlyPointer basePointer = new Pointer(compressed);
+
 			var decompressor = new Decompressor(compressed, output);
-			return decompressor.RawUncompress();
+			if (compressed.Length < CompressorConstants.BlockSize)
+			{
+				var scratch = new byte[CompressorConstants.BlockSize];
+				Buffer.BlockCopy(compressed, 0, scratch, 0, compressed.Length);
+
+				basePointer = new Pointer(scratch);
+			}
+
+			return decompressor.RawUncompress(basePointer);
 		}
 
-		private int RawUncompress()
+		private int RawUncompress(ReadOnlyPointer basePointer)
 		{
-			_rawLength = ReadUncompressedLength();
+			_rawLength = ReadUncompressedLength(ref basePointer);
 
 			_output.SetExpectedLength(_rawLength);
-			DecompressAllTags();
+			DecompressAllTags(basePointer);
 			_output.Flush();
 
-			return (int )_rawLength;
+			return (int) _rawLength;
 		}
 
-		private void DecompressAllTags()
+		private void DecompressAllTags(ReadOnlyPointer _basePointer)
 		{
-			Pointer ip = _ip;
+			ReadOnlyPointer ip = _basePointer;
 
 			// We could have put this refill fragment only at the beginning of the loop.
 			// However, duplicating it at the end of each branch gives the compiler more
 			// scope to optimize the <ip_limit_ - ip> expression based on the local
 			// context, which overall increases speed.
-			bool maybe_refill()
+			bool maybe_refill(ref ReadOnlyPointer basePointer, ref ReadOnlyPointer pointer)
 			{
-				if (_ipLimit - ip < 5)
+				if (_ipLimit - pointer < 5)
 				{
-					_ip = ip;
-					if (!RefillTag()) return false;
+					basePointer = pointer;
+					if (!RefillTag(basePointer)) return false;
 
-					ip = _ip;
+					pointer = basePointer;
 				}
 
 				return true;
 			}
 
-			if ( !maybe_refill() )
+			if ( !maybe_refill(ref _basePointer, ref ip) )
 				return;
 
 			for (;;)
@@ -85,7 +82,7 @@ namespace NSpanny
 					{
 						Assert(literalLength < 61);
 						ip += literalLength;
-						if ( !maybe_refill() )
+						if ( !maybe_refill(ref _basePointer, ref ip) )
 							return;
 
 						continue;
@@ -94,7 +91,7 @@ namespace NSpanny
 					if (literalLength >= 61)
 					{
 						int longLiteral = literalLength - 60;
-						literalLength = (int) ((ip.ToUInt32() & s_wordmask[longLiteral]) + 1);
+						literalLength = (int) (((uint) ip & s_wordmask[longLiteral]) + 1);
 						ip += longLiteral;
 					}
 
@@ -105,10 +102,9 @@ namespace NSpanny
 							return;
 						literalLength -= avail;
 
-						Skip(_peeked);
-						int n;
-						ip = Peek(out n);
-						avail = n;
+						Skip(_peeked, ref _basePointer);
+
+						ip = Peek(_basePointer, out avail);
 						_peeked = avail;
 						if (avail == 0)
 							return; // Premature end of input
@@ -120,13 +116,13 @@ namespace NSpanny
 						return;
 					}
 					ip += literalLength;
-					if ( !maybe_refill() )
+					if ( !maybe_refill(ref _basePointer, ref ip) )
 						return;
 				}
 				else
 				{
 					int entry = char_table[c];
-					int trailer = (int) (ip.ToUInt32() & s_wordmask[entry >> 11]);
+					int trailer = (int) ((uint)ip & s_wordmask[entry >> 11]);
 					int length = entry & 0xff;
 					ip += entry >> 11;
 
@@ -138,21 +134,21 @@ namespace NSpanny
 					{
 						return;
 					}
-					if ( !maybe_refill() )
+					if ( !maybe_refill(ref _basePointer, ref ip) )
 						return;
 				}
 			}
 		}
 
-		private Pointer Peek(out int i)
+		private ReadOnlyPointer Peek(ReadOnlyPointer pointer, out int i)
 		{
-			i = _ipLimit - _ip;
-			return _ip;
+			i = _ipLimit - pointer;
+			return pointer;
 		}
 
-		private void Skip(int peeked)
+		private void Skip(int peeked, ref ReadOnlyPointer pointer)
 		{
-			_ip += peeked;
+			pointer += peeked;
 		}
 
 		// Data stored per entry in lookup table:
@@ -212,12 +208,12 @@ namespace NSpanny
 		private void Assert(bool condition)
 		{}
 
-		private bool RefillTag()
+		private bool RefillTag(ReadOnlyPointer pointer)
 		{
-			return _ip < _ipLimit;
+			return pointer < _ipLimit;
 		}
 
-		private uint ReadUncompressedLength()
+		private uint ReadUncompressedLength(ref ReadOnlyPointer pointer)
 		{
 			// Length is encoded in 1..5 bytes
 			uint result = 0;
@@ -227,8 +223,8 @@ namespace NSpanny
 				if (shift >= 32)
 					return 0;
 
-				byte c = _ip[0];
-				_ip = _ip + 1;
+				byte c = pointer[0];
+				pointer = pointer + 1;
 
 				result |= (c & 0x7fu) << (int) shift;
 				if (c < 128)

@@ -44,6 +44,14 @@ namespace NSpanny
 
 		public static implicit operator int(ReadOnlyPointer pointer) => pointer._position;
 
+		public static explicit operator ushort(ReadOnlyPointer pointer) => ((ReadOnlySpan<ushort>)pointer)[0];
+		public static explicit operator uint(ReadOnlyPointer pointer) => ((ReadOnlySpan<uint>)pointer)[0];
+		public static explicit operator ulong(ReadOnlyPointer pointer) => ((ReadOnlySpan<ulong>)pointer)[0];
+				
+		public static explicit operator ReadOnlySpan<ushort>(ReadOnlyPointer pointer) => MemoryMarshal.Cast<byte, ushort>(pointer._data);
+		public static explicit operator ReadOnlySpan<uint>(ReadOnlyPointer pointer) => MemoryMarshal.Cast<byte, uint>(pointer._data);
+		public static explicit operator ReadOnlySpan<ulong>(ReadOnlyPointer pointer) => MemoryMarshal.Cast<byte, ulong>(pointer._data);
+
 		public byte this[int offset] => _data[offset];
 
 		public static bool operator ==(ReadOnlyPointer left, ReadOnlyPointer right)
@@ -63,10 +71,6 @@ namespace NSpanny
 				? string.Format("{0}[{1}]",     name, _buffer.Length)
 				: string.Format("{0}[{1}]+{2}", name, _buffer.Length, _position);
 		}
-		
-		public ReadOnlySpan<ushort> ToUInt16() => MemoryMarshal.Cast<byte, ushort>(_data);
-		public ReadOnlySpan<uint> ToUInt32() => MemoryMarshal.Cast<byte, uint>(_data);
-		public ReadOnlySpan<ulong> ToUInt64() => MemoryMarshal.Cast<byte, ulong>(_data);
 
 		public void CopyTo(Span<byte> destination)
 		{
@@ -119,6 +123,14 @@ namespace NSpanny
 			return new Pointer(pointer._buffer, pointer._position - value, pointer._name);
 		}
 
+		public static explicit operator ushort(Pointer pointer) => ((Span<ushort>)pointer)[0];
+		public static explicit operator uint(Pointer pointer) => ((Span<uint>)pointer)[0];
+		public static explicit operator ulong(Pointer pointer) => ((Span<ulong>)pointer)[0];
+				
+		public static explicit operator Span<ushort>(Pointer pointer) => MemoryMarshal.Cast<byte, ushort>(pointer._data);
+		public static explicit operator Span<uint>(Pointer pointer) => MemoryMarshal.Cast<byte, uint>(pointer._data);
+		public static explicit operator Span<ulong>(Pointer pointer) => MemoryMarshal.Cast<byte, ulong>(pointer._data);
+
 		public byte this[int offset]
 		{
 			get => _data[offset];
@@ -141,19 +153,6 @@ namespace NSpanny
 		{
 			source.CopyTo(_data.Slice(0, length));
 		}
-
-		public void WriteUInt64(ulong p0)
-		{
-			var uint64 = ToUInt64();
-			uint64[0] = p0;
-		}
-
-		public void WriteUInt64(ReadOnlyPointer src) => src.CopyTo(_data.Slice(0, 8));
-		public void WriteUInt64(Pointer src) => src.CopyTo(_data.Slice(0, 8));
-
-		public Span<ushort> ToUInt16() => MemoryMarshal.Cast<byte, ushort>(_data);
-		public Span<uint> ToUInt32() => MemoryMarshal.Cast<byte, uint>(_data);
-		public Span<ulong> ToUInt64() => MemoryMarshal.Cast<byte, ulong>(_data);
 
 		public override string ToString()
 		{

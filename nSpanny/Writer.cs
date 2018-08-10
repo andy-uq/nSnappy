@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace NSpanny
@@ -22,7 +23,7 @@ namespace NSpanny
 			_index = 0;
 		}
 
-		public bool Append(Pointer ip, int len)
+		public bool Append(ReadOnlyPointer ip, int len)
 		{
 			int spaceLeft = _buffer.Length - _index;
 			if ( spaceLeft < len )
@@ -36,17 +37,19 @@ namespace NSpanny
 			return true;
 		}
 
-		public bool TryFastAppend(Pointer ip, int available, int len)
+		public bool TryFastAppend(ReadOnlyPointer ip, int available, int len)
 		{
 			int spaceLeft = _buffer.Length - _index;
 
-			if (len > 16 || available < 16 || spaceLeft < 16)
+			if (len > 16
+			    || available < 16
+			    || spaceLeft < 16)
 			{
 				return false;
 			}
 
-			var op = new Pointer(_buffer, _index).ToUInt64();
-			var source = ip.ToUInt64();
+			var op     = (Span<ulong>) (new Pointer(_buffer, _index));
+			var source = (ReadOnlySpan<ulong>) ip;
 			op[0] = source[0];
 			op[1] = source[1];
 
@@ -66,9 +69,10 @@ namespace NSpanny
 			var op = new Pointer(_buffer, _index);
 			if ( len <= 16 && offset >= 8 && spaceLeft >= 16 )
 			{
-				var src = new ReadOnlyPointer(_buffer, _index - offset).ToUInt64();
-				op.WriteUInt64(src[0]);
-				op.WriteUInt64(src[1]);
+				var src = (ReadOnlySpan<ulong>) new ReadOnlyPointer(_buffer, _index - offset);
+				var dest = (Span<ulong>) op;
+				dest[0] = src[0];
+				dest[1] = src[1];
 			}
 			else
 			{
@@ -106,14 +110,14 @@ namespace NSpanny
 		{
 			while ( op - src < 8 )
 			{
-				op.WriteUInt64(src);
+				op.Copy(src, 8);
 				len -= op - src;
 				op += op - src;
 			}
 
 			while ( len > 0 )
 			{
-				op.WriteUInt64(src);
+				op.Copy(src, 8);
 				src += 8;
 				op += 8;
 				len -= 8;

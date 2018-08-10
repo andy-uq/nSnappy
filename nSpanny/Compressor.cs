@@ -55,7 +55,7 @@ namespace NSpanny
 			var nextEmit = new ReadOnlyPointer(source);
 			var baseIp = new ReadOnlyPointer(ip);
 
-			uint hash_ptr(ReadOnlyPointer value, int offset) => (value.ToUInt32(offset) * 0x1e35a7bd) >> shift;
+			uint hash_ptr(ReadOnlyPointer value, int offset) => ((uint) (value + offset) * 0x1e35a7bd) >> shift;
 
 			if (source.Length >= inputMarginBytes)
 			{
@@ -91,7 +91,7 @@ namespace NSpanny
 
 						hashTable[hash] = ip - baseIp;
 
-					} while (ip.ToUInt32() != candidate.ToUInt32());
+					} while ((uint) ip != (uint) candidate);
 
 					Assert(nextEmit + 16 <= source.Length);
 
@@ -102,7 +102,7 @@ namespace NSpanny
 
 					do
 					{
-						var b = ip;
+						var b       = ip;
 						int matched = 4 + FindMatchLength(candidate + 4, ip + 4, source.Length);
 						ip += matched;
 						var offset = b - candidate;
@@ -112,23 +112,23 @@ namespace NSpanny
 						var insertTail = ip - 1;
 						nextEmit = ip;
 
-						if ( ip >= ipLimit )
+						if (ip >= ipLimit)
 						{
 							goto emit_remainder;
 						}
 
 						inputBytes = insertTail;
-						
+
 						var prevHash = hash_ptr(inputBytes, 0);
 						hashTable[prevHash] = ip - baseIp - 1;
-						
+
 						var curHash = hash_ptr(inputBytes, 1);
 						candidate = baseIp + hashTable[curHash];
 
-						candidateBytes = candidate.ToUInt32();
+						candidateBytes     = (uint) candidate;
 						hashTable[curHash] = ip - baseIp;
-						
-					} while (inputBytes.ToUInt32(1) == candidateBytes);
+
+					} while ((uint) (inputBytes + 1) == candidateBytes);
 
 					nextHash = hash_ptr(inputBytes, 2);
 					ip = ip + 1;
@@ -147,7 +147,7 @@ namespace NSpanny
 		private int FindMatchLength(ReadOnlyPointer p1, ReadOnlyPointer p2, int length)
 		{
 			int matched = 0;
-			while ( p2 <= length - 4 && p2.ToUInt32() == (p1 + matched).ToUInt32() )
+			while ( p2 <= length - 4 && (uint) p2 == (uint) (p1 + matched) )
 			{
 				p2 += 4;
 				matched += 4;
@@ -155,7 +155,7 @@ namespace NSpanny
 
 			if ( p2 <= length - 4 )
 			{
-				var x = p2.ToUInt32() ^ (p1 + matched).ToUInt32();
+				var x = (uint) p2 ^ (uint) (p1 + matched);
 				var matchingBits = FindLSBSetNonZero(x);
 				matched += matchingBits >> 3;
 			}
@@ -231,7 +231,7 @@ namespace NSpanny
 				op[0] = (byte) (CompressorTag.Copy2ByteOffset | ((len - 1) << 2));
 				op += 1;
 
-				op.WriteUInt16(offset);
+				((Span<ushort>) op)[0] = (ushort) offset;
 				op += 2;
 			}
 
@@ -249,8 +249,10 @@ namespace NSpanny
 
 				if ( allowFastPath && length <= 16 )
 				{
-					dest.Copy64(literal);
-					dest.Copy64(literal + 8, offset: 8);
+					var uint64s = (Span<ulong>) dest;
+					uint64s[0] = (ulong) literal;
+					uint64s[1] = (ulong) (literal + 8);
+
 					return dest + length;
 				}
 			}

@@ -29,7 +29,7 @@ namespace test
 			var a = new Pointer(_buffer);
 			var b = new Pointer(_buffer, 8);
 
-			Assert.That(b, Is.EqualTo(a + 8));
+			Assert.That(b == a+8, Is.True);
 		}
 
 		[Test]
@@ -38,12 +38,9 @@ namespace test
 			var a = new Pointer(_buffer);
 			var b = new Pointer(_buffer, 8);
 
-			Assert.That(b.Equals(a + 8), Is.True);
+			Assert.That(b == (a + 8), Is.True);
 			Assert.That((a + 8) == b, Is.True);
 			Assert.That(a != b, Is.True);
-
-			Assert.That((a + 8).GetHashCode(), Is.EqualTo(b.GetHashCode()));
-			Assert.That(a.GetHashCode(), Is.Not.EqualTo(b.GetHashCode()));
 		}
 
 		[Test]
