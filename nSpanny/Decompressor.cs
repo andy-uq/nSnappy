@@ -7,13 +7,13 @@ namespace NSpanny
 	public class Decompressor
 	{
 		private readonly Writer _output;
-		private int _ipLimit;
+		private int _bufferLength;
 		private uint _rawLength;
 
 		private Decompressor(byte[] compressed, Stream output)
 		{
 			_output = new Writer(output);
-			_ipLimit = compressed.Length;
+			_bufferLength = compressed.Length;
 		}
 
 		public static int Decompress(Stream input, Stream output)
@@ -46,29 +46,29 @@ namespace NSpanny
 			return (int) _rawLength;
 		}
 
-		private void DecompressAllTags(ReadOnlyPointer _basePointer)
+		private void DecompressAllTags(ReadOnlyPointer buffer)
 		{
-			ReadOnlyPointer ip = _basePointer;
+			var ip = buffer;
 
 			// We could have put this refill fragment only at the beginning of the loop.
 			// However, duplicating it at the end of each branch gives the compiler more
 			// scope to optimize the <ip_limit_ - ip> expression based on the local
 			// context, which overall increases speed.
-			bool maybe_refill(ref ReadOnlyPointer basePointer, ref ReadOnlyPointer pointer)
+			bool maybe_refill(ref ReadOnlyPointer bufferPointer, ref ReadOnlyPointer ptr)
 			{
-				if (_ipLimit - pointer < 5)
+				if (_bufferLength - ptr >= 5)
 				{
-					basePointer = pointer;
-					if (!RefillTag(basePointer)) return false;
-
-					pointer = basePointer;
+					return true;
 				}
 
-				return true;
+				bufferPointer = ptr;
+				return ptr < _bufferLength;
 			}
 
-			if ( !maybe_refill(ref _basePointer, ref ip) )
+			if (!maybe_refill(ref buffer, ref ip))
+			{
 				return;
+			}
 
 			for (;;)
 			{
@@ -78,11 +78,11 @@ namespace NSpanny
 				if ((c & 0x3) == CompressorTag.Literal)
 				{
 					int literalLength = ((c >> 2) + 1);
-					if (_output.TryFastAppend(ip, _ipLimit - ip, literalLength))
+					if (_output.TryFastAppend(ip, _bufferLength - ip, literalLength))
 					{
 						Assert(literalLength < 61);
 						ip += literalLength;
-						if ( !maybe_refill(ref _basePointer, ref ip) )
+						if ( !maybe_refill(ref buffer, ref ip) )
 							return;
 
 						continue;
@@ -95,34 +95,40 @@ namespace NSpanny
 						ip += longLiteral;
 					}
 
-					int avail = _ipLimit - ip;
+					int avail = _bufferLength - ip;
 					while (avail < literalLength)
 					{
 						if (!_output.Append(ip, avail))
 							return;
 						literalLength -= avail;
 
-						Skip(_peeked, ref _basePointer);
+						Skip(_peeked, ref buffer);
 
-						ip = Peek(_basePointer, out avail);
+						ip = Peek(buffer, out avail);
 						_peeked = avail;
 						if (avail == 0)
+						{
 							return; // Premature end of input
+						}
 
-						_ipLimit = ip + avail;
+						_bufferLength = ip + avail;
 					}
+
 					if (!_output.Append(ip, literalLength))
 					{
 						return;
 					}
+
 					ip += literalLength;
-					if ( !maybe_refill(ref _basePointer, ref ip) )
+					if (!maybe_refill(ref buffer, ref ip))
+					{
 						return;
+					}
 				}
 				else
 				{
 					int entry = char_table[c];
-					int trailer = (int) ((uint)ip & s_wordmask[entry >> 11]);
+					int trailer = (int) ((uint) ip & s_wordmask[entry >> 11]);
 					int length = entry & 0xff;
 					ip += entry >> 11;
 
@@ -134,15 +140,18 @@ namespace NSpanny
 					{
 						return;
 					}
-					if ( !maybe_refill(ref _basePointer, ref ip) )
+
+					if (!maybe_refill(ref buffer, ref ip))
+					{
 						return;
+					}
 				}
 			}
 		}
 
 		private ReadOnlyPointer Peek(ReadOnlyPointer pointer, out int i)
 		{
-			i = _ipLimit - pointer;
+			i = _bufferLength - pointer;
 			return pointer;
 		}
 
@@ -207,11 +216,6 @@ namespace NSpanny
 		[SuppressMessage("ReSharper", "UnusedParameter.Local")]
 		private void Assert(bool condition)
 		{}
-
-		private bool RefillTag(ReadOnlyPointer pointer)
-		{
-			return pointer < _ipLimit;
-		}
 
 		private uint ReadUncompressedLength(ref ReadOnlyPointer pointer)
 		{
